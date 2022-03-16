@@ -50,7 +50,7 @@ from table(generator(rowcount => 200))
 
 -- An additional challenge here is that Snowflake's understanding of spatial 
 -- data is based on geographical longitude and latitude instead of a standard 
--- 2-dimensional coordinate system, which complicates our mathematics. The simplest
+-- two-dimensional coordinate system, which complicates our mathematics. The simplest
 -- solution here is to drastically reduce the scale of our work to fit within the standard
 -- confines of latitude and longitude centered at (0, 0), by dividing all of our coordinates
 -- and distances by 10,000
