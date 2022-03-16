@@ -55,7 +55,7 @@ from table(generator(rowcount => 200))
 
 -- An additional challenge here is that Snowflake's understanding of spatial 
 -- data is based on geographical longitude and latitude instead of a standard 
--- 2-dimensional coordinate system, which complicates our mathematics in 2 ways:
+-- two-dimensional coordinate system, which complicates our mathematics in 3 ways:
 
 --  1.  We must consider the curvature of the Earth. Instead of simply drawing
 --      a circle on a plane, we are drawing it on the surface of a sphere.
@@ -67,6 +67,10 @@ from table(generator(rowcount => 200))
 --      between -180 and 180, so if we exceed this range during our calculations 
 --      then we must adjust by 360 to return to this range. This is achieved by 
 --      leveraging a MODULO function
+
+--  3.  When drawing circles that cross the antimeridian of the Earth, we must
+--      consider how these objects will be respresented in Snowflake's geoJSON
+--      structure and how these will be rendered on display software
 
 -- Taking the above into account, we follow these steps to calculate the points on each circle:
 
