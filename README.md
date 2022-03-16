@@ -82,7 +82,34 @@ The image below demonstrates how this can fail to render in Tableau (orange), co
 
 ![GeoJSON Rendering Across the Antimeridian Without Cutting](assets/GeoJSON-antimeridian-crossing-example.png)
 
-To correct this, we must cut our shape exactly at the antimerdian boundary, adding a new point to our circle each time it crosses -180° or 180° longitude. As our circle is an approximation based on a number of points, it is acceptable for us to simply apply a standard `y = mx + c` approach here to find the equation for the line that crosses the antimeridian and add a point where `x = 180` or `x = -180`.
+To correct this, we must cut our shape exactly at the antimerdian boundary, starting a new set of lines for our circle each time it crosses -180° or 180° longitude. As our circle is an approximation based on a number of points, it is acceptable for us to simply apply a standard `y = mx + c` approach here to find the equation for the line that crosses the antimeridian and add a break point where `x = 180` or `x = -180`. We can then start a new set of lines from the opposite end of the axis.
+
+For example, consider the following GeoJSON line which crosses the antimeridian:
+
+```json
+{
+  "type": "LineString",
+  "coordinates": [
+    [177, 0], [179, 0], [-179, 0], [-177, 0]
+  ]
+}
+```
+
+To cut this, we would convert from a `LineString` object type to a `MultiLineString` that combines several lines that are clearly separated at the antimeridian:
+
+```json
+{
+  "type": "MultiLineString",
+  "coordinates": [
+    [
+      [177, 0], [179, 0], [180, 0]
+    ],
+    [
+      [-180, 0], [-179, 0], [-177, 0]
+    ]
+  ]
+}
+```
 
 Unfortunately, I have not been able to find a way to achieve this successfully in Snowflake at this time. I do not believe Snowflake's current GeoJSON functionality supports constructing polygons that are formed of MultiLineString object types. For now, my recommendation is to avoid using Snowflake for geospatial mapping when you know you will cross the antimeridian.
 
