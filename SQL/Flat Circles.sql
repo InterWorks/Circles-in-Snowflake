@@ -13,7 +13,7 @@ create or replace transient schema geographic_data_testing.flat_circles;
 
 use geographic_data_testing.flat_circles;
 
--- Create a table with the different longitude and latitude locations of each data point 
+-- Create a table with the different location coordinates of each data point 
 create or replace transient table locations (
     id number identity
   , x float
