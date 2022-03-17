@@ -105,7 +105,7 @@ select
   , generated_row_id as circle_point_id
 
   --  4.  Calculate the angle between the center point's horizontal axis and the circle point
-  , MOD(360 * circle_point_id / total_points_in_circle, 360) as circle_point_angle_degrees
+  , 360 * circle_point_id / total_points_in_circle as circle_point_angle_degrees
   , RADIANS(circle_point_angle_degrees) as circle_point_angle_radians
 
   --  5.  Calculate the latitude and longitude of the point on the circle
