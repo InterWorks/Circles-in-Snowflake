@@ -30,7 +30,7 @@ x = a + rcos(θ)
 y = b + rsin(θ)
 ```
 
-If we ensure all of our values are small enough to fit on a relatively flat section of the Earth, for example by dividing all of our coordinates and distances by 10,000, then we can reasonably assume that our canvas is a flat two-dimensional plane and plot our circles against it.
+If we ensure all of our values are small enough to fit on a relatively flat section of the Earth, for example by dividing all of our coordinates and distances by Snowflake's approximation of the distance between `(0,0)` and `(0,1)`, then we can reasonably assume that our canvas is a flat two-dimensional plane and plot our circles against it.
 
 ## Generating Circles on a Geospatial Surface (such as Earth)
 
@@ -115,4 +115,8 @@ Unfortunately, I have not been able to find a way to achieve this successfully i
 
 #### Credit
 
-The variant of the Haversine formula that we have used to calculate these points was sourced from [Movable Type Scripts](https://www.movable-type.co.uk/scripts/latlong.html).
+This repository has been authored by [Chris Hastie](https://interworks.com/people/chris-hastie/).
+
+My colleague [Karl Young](https://interworks.com/people/karl-young) supported with testing and refinement.
+
+The variant of the Haversine formula that we have used to calculate points on a geospatial surface was sourced from [Movable Type Scripts](https://www.movable-type.co.uk/scripts/latlong.html).

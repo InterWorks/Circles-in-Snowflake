@@ -1,4 +1,3 @@
-
 /*
 This script creates three circle objects of varying size in the Snowflake cloud data platform.
 
@@ -53,7 +52,8 @@ from table(generator(rowcount => 200))
 -- two-dimensional coordinate system, which complicates our mathematics. The simplest
 -- solution here is to drastically reduce the scale of our work to fit within the standard
 -- confines of latitude and longitude centered at (0, 0), by dividing all of our coordinates
--- and distances by 10,000
+-- and distances by a rescaling multiple equivalent to Snowflake's understanding of the distance
+-- between a single degree of latitude.
 
 -- Taking the above into account, we follow these steps to calculate the points on each circle:
 
@@ -62,58 +62,80 @@ from table(generator(rowcount => 200))
 --          where a higher value takes longer to compute but yields
 --          greater accuracy
 --      -   Rescaling multiple, which is used to determine the degree to which we 
---          will shrink any coordinates and distances
+--          will shrink any coordinates and distances. This is the distance in metres that Snowflake perceives
+--          for a single degree of latitude
 
 --  2.  Retrieve the data for our locations
 --      -   Location ID
---      -   Location x, which has been divided by the rescaling multiple to simplify 2D plotting on Snowflake's geospatial surface
---      -   Location y, which has been divided by the rescaling multiple to simplify 2D plotting on Snowflake's geospatial surface
---      -   Circle radius, which has been divided by the rescaling multiple to simplify 2D plotting on Snowflake's geospatial surface
+--      -   Location x
+--      -   Location y
+--      -   Circle radius
 
---  3.  Retrieve input data for the specific point being identified
+--  3.  Rescale the data for our locations
+--      -   Location x rescaled, which has been divided by the rescaling multiple to simplify 2D plotting on Snowflake's geospatial surface
+--      -   Location y rescaled, which has been divided by the rescaling multiple to simplify 2D plotting on Snowflake's geospatial surface
+--      -   Circle radius rescaled, which has been divided by the rescaling multiple to simplify 2D plotting on Snowflake's geospatial surface
+
+--  4.  Retrieve input data for the specific point being identified
 --      -   Circle Point ID
 
---  4.  Calculate the bearing for the point from the central location
+--  5.  Calculate the bearing for the point from the central location
 --      -   Circle point angle in degrees, which is the angle 
 --          between the center location and the circle point,
 --          from the perspective of the x axis
 --      -   Circle point angle in radians, converted from degrees
 
---  5.  Calculate the latitude and longitude of the point on the circle
+--  6.  Calculate the latitude and longitude of the point on the circle
 --      -   Circle point latitude in radians, calculated as r*sin(ϴ)
 --      -   Circle point x, which is the latitude converted from radians to degrees
 --      -   Circle point longitude in radians, calculated as r*cos(ϴ)
 --      -   Circle point y, which is the longitude converted from radians to degrees
 
---  6.  Generate the specific point on the circle
+--  7.  Generate the specific point on the circle
 --      -   Circle point
+
+--  8.  (Optional) Quick validation that the distance between the center and the point is approximately accurate
+--      -   Validation
 
 create or replace view circle_points
 as
 select 
   --  1.  Define our standard input variables
     120 as total_points_in_circle
-  , 10000 as rescaling_multiple
+  , ST_DISTANCE(ST_MAKEPOINT(0,0), ST_MAKEPOINT(0,1)) as rescaling_multiple
 
   --  2.  Retrieve the data for our locations
   , locations.id as location_id
-  , locations.x/rescaling_multiple as location_x
-  , locations.y/rescaling_multiple as location_y
-  , locations.radius/rescaling_multiple as circle_radius
+  , locations.x as location_x
+  , locations.y as location_y
+  , locations.radius as circle_radius
+  
+  --  3.  Rescale the data for our locations
+  , location_x/rescaling_multiple as location_x_rescaled
+  , location_y/rescaling_multiple as location_y_rescaled
+  , circle_radius/rescaling_multiple as circle_radius_rescaled
 
-  --  3.  Retrieve input data for the specific point being identified
+  --  4.  Retrieve input data for the specific point being identified
   , generated_row_id as circle_point_id
 
-  --  4.  Calculate the angle between the center point's horizontal axis and the circle point
+  --  5.  Calculate the angle between the center point's horizontal axis and the circle point
   , 360 * circle_point_id / total_points_in_circle as circle_point_angle_degrees
   , RADIANS(circle_point_angle_degrees) as circle_point_angle_radians
 
-  --  5.  Calculate the latitude and longitude of the point on the circle
-  , location_x + circle_radius * SIN(circle_point_angle_radians) as circle_point_x
-  , location_y + circle_radius * COS(circle_point_angle_radians) as circle_point_y
+  --  6.  Calculate the latitude and longitude of the point on the circle
+  , location_x_rescaled + circle_radius_rescaled * SIN(circle_point_angle_radians) as circle_point_x
+  , location_y_rescaled + circle_radius_rescaled * COS(circle_point_angle_radians) as circle_point_y
 
-  --  6.  Generate the specific point on the circle
+  --  7.  Generate the specific point on the circle
   , ST_MAKEPOINT(circle_point_y, circle_point_x) as circle_point
+  
+  --  8.  (Optional) Quick validation that the distance between the center and the point is approximately accurate
+  /* -- Commented out to improve performance
+  , ABS(
+        ST_DISTANCE(ST_MAKEPOINT(location_y_rescaled, location_x_rescaled), circle_point) 
+      - circle_radius
+    ) < 0.00001 as validation
+  */
 
 from locations
   cross join generated_rows
